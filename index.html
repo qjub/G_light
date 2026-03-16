@@ -105,15 +105,11 @@
 
     .hero-title {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(80px, 12vw, 160px);
-      line-height: 0.9;
+      font-size: clamp(60px, 10vw, 140px);
+      line-height: 1;
       color: var(--white);
-      letter-spacing: 2px;
-    }
-
-    .hero-title span {
-      display: block;
-      color: var(--white);
+      letter-spacing: 4px;
+      white-space: nowrap;
     }
 
     .hero-subtitle {
@@ -569,30 +565,154 @@
 
     .img-placeholder .icon { font-size: 32px; opacity: 0.5; }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      nav { padding: 16px 24px; }
-      .hero { grid-template-columns: 1fr; padding: 100px 24px 60px; }
-      .hero-right { align-items: flex-start; flex-direction: row; }
-      .about { grid-template-columns: 1fr; }
-      .about-image { height: 50vw; }
-      .about-content { padding: 48px 24px; }
-      .services { padding: 60px 24px; }
-      .services-grid { grid-template-columns: 1fr 1fr; }
-      .lifestyle { padding: 60px 24px; }
-      .photo-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
-      .photo-grid .photo-large { grid-row: span 1; }
-      .extras { padding: 60px 24px; }
-      .extras-grid { grid-template-columns: 1fr; gap: 32px; }
-      .footer-cta { padding: 80px 24px; }
-      .footer-bar { padding: 20px 24px; flex-direction: column; gap: 16px; }
-      .section-bar { padding: 8px 24px; }
+    /* ── HAMBURGER ── */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      z-index: 200;
     }
 
+    .nav-hamburger span {
+      display: block;
+      width: 24px;
+      height: 1.5px;
+      background: var(--gold);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .nav-mobile-menu {
+      display: none;
+      position: fixed;
+      inset: 0;
+      top: 56px;
+      background: rgba(10,10,10,0.98);
+      backdrop-filter: blur(12px);
+      z-index: 150;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .nav-mobile-menu.open { display: flex; }
+
+    .nav-mobile-menu a {
+      color: var(--white);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      letter-spacing: 6px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-mobile-menu a:hover { color: var(--gold); }
+
+    /* ── RESPONSIVE 900px ── */
+    @media (max-width: 900px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .section-bar .nav-sm { display: none; }
+      .section-bar { padding: 8px 20px; justify-content: center; }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 100px 20px 60px;
+        gap: 40px;
+        min-height: auto;
+        padding-bottom: 80px;
+      }
+
+      .hero-right { align-items: flex-start; }
+
+      .hero-stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+
+      .stat { text-align: left; }
+      .stat-number { font-size: 36px; }
+      .stat-label { font-size: 9px; max-width: 120px; }
+
+      .about { grid-template-columns: 1fr; }
+      .about-image { height: 60vw; min-height: 280px; }
+      .about-content { padding: 48px 20px; }
+
+      .services { padding: 60px 20px; }
+      .services-grid { grid-template-columns: 1fr 1fr; gap: 2px; }
+      .service-card { padding: 32px 24px; }
+
+      .lifestyle { padding: 60px 20px; }
+      .photo-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 200px 200px 200px;
+      }
+      .photo-grid .photo-large { grid-row: span 1; grid-column: span 2; }
+
+      .extras { padding: 60px 20px; }
+      .extras-grid { grid-template-columns: 1fr; gap: 36px; }
+
+      .footer-cta { padding: 80px 20px; }
+      .footer-bar {
+        padding: 20px;
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+      .footer-bar .nav-sm { flex-wrap: wrap; justify-content: center; gap: 16px; }
+    }
+
+    /* ── RESPONSIVE 600px ── */
     @media (max-width: 600px) {
+      nav { padding: 12px 16px; }
+
+      .hero { padding: 88px 16px 60px; gap: 32px; }
+      .hero-title { font-size: clamp(72px, 20vw, 120px); }
+      .hero-cta { font-size: 10px; padding: 10px 20px; letter-spacing: 2px; }
+
+      .hero-stats { flex-direction: column; gap: 20px; }
+      .stat-number { font-size: 42px; }
+      .stat-label { max-width: none; }
+
+      .about-image { height: 75vw; }
+      .about-content { padding: 40px 16px; gap: 20px; }
+      .about-heading { font-size: clamp(30px, 9vw, 48px); }
+      .about-text { font-size: 13px; }
+      .tags { gap: 6px; }
+      .tag { font-size: 9px; padding: 5px 10px; }
+
+      .services { padding: 48px 16px; }
       .services-grid { grid-template-columns: 1fr; }
-      .photo-grid { grid-template-columns: 1fr; }
-      .hero-right { flex-direction: column; }
+      .service-card { padding: 28px 20px; }
+
+      .lifestyle { padding: 48px 16px; }
+      .photo-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+      .photo-grid .photo { height: 56vw; }
+      .photo-grid .photo-large { grid-column: span 1; }
+
+      .extras { padding: 48px 16px; }
+      .extras-header { margin-bottom: 36px; }
+
+      .footer-cta { padding: 64px 16px; }
+      .footer-title { font-size: clamp(36px, 10vw, 64px); }
+      .footer-subtitle { font-size: 10px; letter-spacing: 2px; }
+      .footer-btn { padding: 14px 28px; font-size: 10px; }
+
+      .section-bar { padding: 8px 16px; }
     }
 
     /* ── CUSTOM CURSOR ── */
@@ -781,16 +901,24 @@
       <li><a href="#lifestyle">Lifestyle</a></li>
       <li><a href="#kontakt">Kontakt</a></li>
     </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="nav-mobile-menu" id="mobileMenu">
+    <a href="#o-nas"   onclick="closeMobileMenu()">O nás</a>
+    <a href="#sluzby"  onclick="closeMobileMenu()">Služby</a>
+    <a href="#lifestyle" onclick="closeMobileMenu()">Lifestyle</a>
+    <a href="#kontakt" onclick="closeMobileMenu()">Kontakt</a>
+  </div>
 
   <!-- HERO -->
   <section class="hero" id="home">
     <div class="hero-left">
       <span class="hero-location">Bánovce nad Bebravou, Slovakia</span>
-      <h1 class="hero-title">
-        <span>G-</span>
-        <span>LIGHT</span>
-      </h1>
+      <h1 class="hero-title">G-LIGHT</h1>
       <p class="hero-subtitle">Svetelný Expert</p>
       <a href="#sluzby" class="hero-cta">★ Dostupný pre opravu, alebo aj niečo viac... →</a>
     </div>
@@ -1004,6 +1132,21 @@
   </div>
 
   <script>
+    // ── HAMBURGER MENU ──
+    const hamburger   = document.getElementById('hamburger');
+    const mobileMenu  = document.getElementById('mobileMenu');
+
+    hamburger.addEventListener('click', () => {
+      const open = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+
+    function closeMobileMenu() {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('open');
+      document.body.style.overflow = '';
+    }
     // ── CUSTOM CURSOR ──
     const cursor = document.getElementById('cursor');
     const ring = document.getElementById('cursorRing');
