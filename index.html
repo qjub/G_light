@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G-Light | Svetelný Expert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-bright: #f0c040;
+      --black: #0a0a0a;
+      --dark: #111111;
+      --darker: #0d0d0d;
+      --white: #ffffff;
+      --gray: #888888;
+      --text: #cccccc;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Barlow', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 400;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 120px 48px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .hero-location {
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(80px, 12vw, 160px);
+      line-height: 0.9;
+      color: var(--white);
+      letter-spacing: 2px;
+    }
+
+    .hero-title span {
+      display: block;
+      color: var(--white);
+    }
+
+    .hero-subtitle {
+      font-size: 12px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      padding: 12px 28px;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      font-family: 'Barlow', sans-serif;
+      font-weight: 600;
+      transition: background 0.2s, color 0.2s;
+      width: fit-content;
+    }
+
+    .hero-cta:hover { background: var(--gold); color: var(--black); }
+
+    .hero-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 32px;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 24px;
+    }
+
+    .stat {
+      text-align: right;
+    }
+
+    .stat-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+
+    /* ── SECTION DIVIDER ── */
+    .section-bar {
+      background: var(--darker);
+      border-top: 1px solid rgba(201,168,76,0.1);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      padding: 8px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-bar .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 4px;
+      color: var(--gold);
+    }
+
+    .section-bar .nav-sm {
+      display: flex;
+      gap: 28px;
+    }
+
+    .section-bar .nav-sm a {
+      color: var(--gray);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    /* ── ABOUT ── */
+    .about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 80vh;
+    }
+
+    .about-image {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .about-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      filter: grayscale(20%);
+    }
+
+    .about-content {
+      padding: 80px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    .about-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 5vw, 60px);
+      line-height: 1;
+      color: var(--white);
+    }
+
+    .about-heading em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .about-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text);
+      max-width: 520px;
+    }
+
+    .about-text strong { color: var(--white); font-weight: 600; }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      padding: 6px 14px;
+      border: 1px solid rgba(201,168,76,0.3);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── SERVICES ── */
+    .services {
+      padding: 100px 48px;
+      background: var(--darker);
+    }
+
+    .services-header {
+      margin-bottom: 64px;
+    }
+
+    .services-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(48px, 6vw, 80px);
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .services-title em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+
+    .service-card {
+      padding: 48px 36px;
+      background: var(--dark);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: border-color 0.3s, background 0.3s;
+      position: relative;
+    }
+
+    .service-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      background: rgba(201,168,76,0.03);
+    }
+
+    .service-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      color: rgba(201,168,76,0.15);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .service-icon {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .service-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+
+    .service-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--gray);
+    }
+
+    /* ── LIFESTYLE ── */
+    .lifestyle {
+      padding: 100px 48px;
+    }
+
+    .lifestyle-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(48px, 6vw, 80px);
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 48px;
+    }
+
+    .lifestyle-title em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 280px 280px;
+      gap: 4px;
+    }
+
+    .photo-grid .photo {
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-grid .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+      filter: brightness(0.85);
+    }
+
+    .photo-grid .photo:hover img {
+      transform: scale(1.04);
+      filter: brightness(1);
+    }
+
+    .photo-grid .photo-large {
+      grid-row: span 2;
+    }
+
+    /* ── LIFESTYLE EXTRAS ── */
+    .extras {
+      padding: 80px 48px;
+      background: var(--darker);
+    }
+
+    .extras-header {
+      margin-bottom: 56px;
+    }
+
+    .extras-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 5vw, 64px);
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .extras-title em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .extras-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+    }
+
+    .extra-item {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .extra-icon { font-size: 28px; }
+
+    .extra-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--white);
+    }
+
+    .extra-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--gray);
+    }
+
+    /* ── FOOTER CTA ── */
+    .footer-cta {
+      padding: 140px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .footer-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, rgba(201,168,76,0.08) 0%, transparent 70%);
+    }
+
+    .footer-label {
+      font-size: 10px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 24px;
+    }
+
+    .footer-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(48px, 8vw, 100px);
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+
+    .footer-title em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .footer-subtitle {
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: var(--gray);
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+
+    .footer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 40px;
+      background: var(--gold);
+      color: var(--black);
+      font-family: 'Barlow', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .footer-btn:hover { background: var(--gold-bright); }
+
+    .footer-bar {
+      background: var(--darker);
+      padding: 20px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(201,168,76,0.1);
+    }
+
+    .footer-bar .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      letter-spacing: 4px;
+      color: var(--gold);
+    }
+
+    .footer-bar .nav-sm {
+      display: flex;
+      gap: 28px;
+    }
+
+    .footer-bar .nav-sm a {
+      color: var(--gray);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+
+    /* ── IMAGE PLACEHOLDER ── */
+    .img-placeholder {
+      width: 100%;
+      height: 100%;
+      background: rgba(201,168,76,0.05);
+      border: 1px dashed rgba(201,168,76,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      color: rgba(201,168,76,0.4);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .img-placeholder .icon { font-size: 32px; opacity: 0.5; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      .hero { grid-template-columns: 1fr; padding: 100px 24px 60px; }
+      .hero-right { align-items: flex-start; flex-direction: row; }
+      .about { grid-template-columns: 1fr; }
+      .about-image { height: 50vw; }
+      .about-content { padding: 48px 24px; }
+      .services { padding: 60px 24px; }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      .lifestyle { padding: 60px 24px; }
+      .photo-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .photo-grid .photo-large { grid-row: span 1; }
+      .extras { padding: 60px 24px; }
+      .extras-grid { grid-template-columns: 1fr; gap: 32px; }
+      .footer-cta { padding: 80px 24px; }
+      .footer-bar { padding: 20px 24px; flex-direction: column; gap: 16px; }
+      .section-bar { padding: 8px 24px; }
+    }
+
+    @media (max-width: 600px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .photo-grid { grid-template-columns: 1fr; }
+      .hero-right { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">G-Light</a>
+    <ul class="nav-links">
+      <li><a href="#o-nas">O nás</a></li>
+      <li><a href="#sluzby">Služby</a></li>
+      <li><a href="#lifestyle">Lifestyle</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-left">
+      <span class="hero-location">Borovec nad Bebravou, Slovakia</span>
+      <h1 class="hero-title">
+        <span>G-</span>
+        <span>LIGHT</span>
+      </h1>
+      <p class="hero-subtitle">Svetelný Expert</p>
+      <a href="#sluzby" class="hero-cta">★ Dostaňte pod správu, alebo si nájdi stratu →</a>
+    </div>
+    <div class="hero-right">
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Spokojnosť</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">NE</div>
+          <div class="stat-label">Elektrický strojčí, ktorý sa bojí oprávňovať</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">S8+</div>
+          <div class="stat-label">Rokov skúseností</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BAR -->
+  <div class="section-bar">
+    <span class="logo">G-Light</span>
+    <div class="nav-sm">
+      <a href="#o-nas">O nás</a>
+      <a href="#sluzby">Služby</a>
+      <a href="#lifestyle">Lifestyle</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="about" id="o-nas">
+    <div class="about-image">
+      <!-- NAHRAĎ: images/profil.jpg -->
+      <img src="images/profil.jpg" alt="G-Light"
+           onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\'><span class=\'icon\'>👤</span><span>images/profil.jpg</span></div>'">
+    </div>
+    <div class="about-content">
+      <span class="section-label">O nás</span>
+      <h2 class="about-heading">KEĎ TO INÍ<br>VZDAJÚ SÚ LEN <em>MRDKY</em></h2>
+      <p class="about-text">
+        <strong>G-Light</strong> nie je len opravovať svetlá. Ja to myslí, ku momentu využiť auto vtedy, keď každý iný povedia "mrdky". Žiadna svetla nená prstí zlyhní. Žiadna zábranie nie je bezprávna.
+      </p>
+      <p class="about-text">
+        Ide o <strong>adaptívnych LED matíc</strong> na šetrovanie diaľkových svetiel do OED zabitých svetiel pri HID výlespy — ako to svetlí (tento by máp záleží), aní to ide opravovať. Diagnostika na priori, ktorý navodiť a kultúra automobilova.
+      </p>
+      <p class="about-text">Riady priezo, ktoré opravovaných servisov: <strong>nula nevyriešených reklamácií</strong>. To hovorí za všetko.</p>
+      <div class="tags">
+        <span class="tag">LED moduly</span>
+        <span class="tag">Laserové svetlá</span>
+        <span class="tag">HID / Xenón</span>
+        <span class="tag">OBD</span>
+        <span class="tag">Inšt. na mieru</span>
+        <span class="tag">Laserné skener</span>
+        <span class="tag">Diagnostika</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- BAR -->
+  <div class="section-bar">
+    <span class="logo">G-Light</span>
+    <div class="nav-sm">
+      <a href="#o-nas">O nás</a>
+      <a href="#sluzby">Služby</a>
+      <a href="#lifestyle">Lifestyle</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section class="services" id="sluzby">
+    <div class="services-header">
+      <span class="section-label">Čo robím</span>
+      <h2 class="services-title">SLUŽBY <em>&</em> ŠPECIALITY</h2>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-number">01</div>
+        <div class="service-icon">💡</div>
+        <div class="service-name">Oprava LED modulov</div>
+        <p class="service-desc">Diagnostika a oprava OEM LED jednotiek, adaptive matrix systémov a najnovšej generácie svetelných modulov vo všetkých značkách.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-number">02</div>
+        <div class="service-icon">⚡</div>
+        <div class="service-name">HID &amp; Xenón servis</div>
+        <p class="service-desc">Výmena, setvovanie a zapojenie HID a xenónových sústav. Plná kompatibilita a správne nastavenie optiky.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-number">03</div>
+        <div class="service-icon">🔍</div>
+        <div class="service-name">Hĺbková diagnostika</div>
+        <p class="service-desc">Čítanie chybových kódov, analýza elektrických problémov a komplexný prehľad stavu svetelnej sústavy vozidla.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-number">04</div>
+        <div class="service-icon">✨</div>
+        <div class="service-name">Leštenie &amp; ochrana</div>
+        <p class="service-desc">Profesionálne leštenie zakalených svetlometov, nanesenie UV ochrany a keramický coating pre dlhodobú transparentnosť.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-number">05</div>
+        <div class="service-icon">🎯</div>
+        <div class="service-name">Nastavenie svetiel</div>
+        <p class="service-desc">Presné geometrické nastavenie svetlometov podľa predpisov. Správny sklon a smer pre maximálnu bezpečnosť.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-number">06</div>
+        <div class="service-icon">🛡️</div>
+        <div class="service-name">Postará sa o tvou scéru</div>
+        <p class="service-desc">Komplexná starostlivosť o svetlomety na mieru. Pravidelná údržba, predchádzanie poruchám a dlhodobá ochrana.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BAR -->
+  <div class="section-bar">
+    <span class="logo">G-Light</span>
+    <div class="nav-sm">
+      <a href="#o-nas">O nás</a>
+      <a href="#sluzby">Služby</a>
+      <a href="#lifestyle">Lifestyle</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+  </div>
+
+  <!-- LIFESTYLE -->
+  <section class="lifestyle" id="lifestyle">
+    <h2 class="lifestyle-title">NOČNÉ <em>G-LIGHT</em> LIFE</h2>
+    <div class="photo-grid">
+      <!-- NAHRAĎ: images/slovnaft.jpg, images/auto.jpg, images/london.jpg, images/portret1.jpg, images/portret2.jpg -->
+      <div class="photo photo-large">
+        <img src="images/slovnaft.jpg" alt="Slovnaft"
+             onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\'><span class=\'icon\'>📸</span><span>images/slovnaft.jpg</span></div>'">
+      </div>
+      <div class="photo">
+        <img src="images/auto.jpg" alt="Auto"
+             onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\'><span class=\'icon\'>📸</span><span>images/auto.jpg</span></div>'">
+      </div>
+      <div class="photo">
+        <img src="images/london.jpg" alt="London"
+             onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\'><span class=\'icon\'>📸</span><span>images/london.jpg</span></div>'">
+      </div>
+      <div class="photo">
+        <img src="images/portret1.jpg" alt="G-Light"
+             onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\'><span class=\'icon\'>📸</span><span>images/portret1.jpg</span></div>'">
+      </div>
+      <div class="photo">
+        <img src="images/portret2.jpg" alt="G-Light"
+             onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\'><span class=\'icon\'>📸</span><span>images/portret2.jpg</span></div>'">
+      </div>
+    </div>
+  </section>
+
+  <!-- BAR -->
+  <div class="section-bar">
+    <span class="logo">G-Light</span>
+    <div class="nav-sm">
+      <a href="#o-nas">O nás</a>
+      <a href="#sluzby">Služby</a>
+      <a href="#lifestyle">Lifestyle</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+  </div>
+
+  <!-- EXTRAS -->
+  <section class="extras">
+    <div class="extras-header">
+      <span class="section-label">Aj mimo servisu</span>
+      <h2 class="extras-title">MIMO <em>SERVISU</em></h2>
+    </div>
+    <div class="extras-grid">
+      <div class="extra-item">
+        <div class="extra-icon">🚗</div>
+        <div class="extra-name">Audi S8+</div>
+        <p class="extra-desc">Osobné auto, ktoré si obstaral v uplynulom roku. Audi S8+ — to je plný záväzok k štýlu a výkonu, každý deň pri práci aj pri oddychu.</p>
+      </div>
+      <div class="extra-item">
+        <div class="extra-icon">🌙</div>
+        <div class="extra-name">Nočné výjazdy s homies</div>
+        <p class="extra-desc">Keď servis skončí, noc začína. G-Light žije rovnaký životný štýl, ktorý vdychuje do svetiel svojich klientov — rýchly, ostrý a bez kompromisov.</p>
+      </div>
+      <div class="extra-item">
+        <div class="extra-icon">🍣</div>
+        <div class="extra-name">Kvalitné sushi</div>
+        <p class="extra-desc">Aj po servise na detailoch záleží. Preto Gastronómia, presnosť v prácou sa odráža aj v preferenciách — len to najlepšie.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER CTA -->
+  <section class="footer-cta" id="kontakt">
+    <p class="footer-label">Kontakt</p>
+    <h2 class="footer-title">TEN <em>ČO NAVRÁTI SVETLO</em><br>AJ DO TEJ NAJTMAVŠEJ DIERY</h2>
+    <p class="footer-subtitle">Borovec nad Bebravou &amp; okolí · Dohodou aj inde</p>
+    <a href="tel:+421900000000" class="footer-btn">★ Zavolaj G-Lightovi →</a>
+  </section>
+
+  <!-- FOOTER BAR -->
+  <div class="footer-bar">
+    <span class="logo">G-Light</span>
+    <div class="nav-sm">
+      <a href="#o-nas">O nás</a>
+      <a href="#sluzby">Služby</a>
+      <a href="#lifestyle">Lifestyle</a>
+      <a href="#kontakt">Kontakt</a>
+    </div>
+  </div>
+
+</body>
+</html>
