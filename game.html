@@ -360,6 +360,8 @@ function initGame() {
   G.flashAlpha  = 0;
   G.lives       = 3;
   G.hitCooldown = 0;
+  G.lastLanes   = [];
+  G.obsCount    = 0;
 
   keys.left = false;
   keys.right = false;
@@ -371,21 +373,41 @@ function initGame() {
 //  SPAWN
 // ══════════════════════════════
 function spawnObs() {
-  const lane = Math.floor(Math.random() * 3);
-  const x    = G.roadX + lane * G.laneW + G.laneW / 2;
+  // forced variety — track last 2 lanes, force different lane occasionally
+  if (!G.lastLanes) G.lastLanes = [];
 
-  // weighted type
-  const r = Math.random();
+  let lane;
+  // after 10s, force player's lane every 4th obstacle
+  G.obsCount = (G.obsCount || 0) + 1;
+  if (G.elapsed > 10 && G.obsCount % 4 === 0) {
+    // aim at player's current lane
+    lane = Math.floor((G.carX - G.roadX) / G.laneW);
+    lane = Math.max(0, Math.min(2, lane));
+  } else {
+    // random but avoid repeating same lane 3x in a row
+    const tries = [0,1,2].sort(() => Math.random()-0.5);
+    lane = tries.find(l => G.lastLanes.slice(-2).indexOf(l) === -1) ?? tries[0];
+  }
+  G.lastLanes.push(lane);
+  if (G.lastLanes.length > 3) G.lastLanes.shift();
+
+  const x    = G.roadX + lane * G.laneW + G.laneW / 2;
+  const r    = Math.random();
   const type = r < 0.5 ? 'car' : r < 0.75 ? 'pothole' : 'truck';
 
-  const w = type==='truck' ? G.laneW*0.82 : type==='car' ? 38 : 30;
-  const h = type==='truck' ? 100 : type==='car' ? 66 : 20;
+  // widths relative to laneW — no hiding on lane center
+  const w = type==='truck'   ? G.laneW * 0.88
+          : type==='car'     ? G.laneW * 0.72
+          :                    G.laneW * 0.60;  // pothole
+  const h = type==='truck' ? 100 : type==='car' ? 66 : 22;
 
-  // cap obstacle speed so they don't warp
-  const maxObsSpeed = Math.min(G.speed, 420);
-  const spd = maxObsSpeed * (0.55 + Math.random() * 0.4);
+  // small random offset within lane so center-camping doesn't work
+  const maxOffset = G.laneW * 0.12;
+  const xOffset = (Math.random() - 0.5) * 2 * maxOffset;
 
-  G.obs.push({ x, y: -h - 10, w, h, type, speed: spd });
+  const maxObsSpeed = Math.min(G.speed, 480);
+  const spd  = maxObsSpeed * (0.55 + Math.random() * 0.4);
+  G.obs.push({ x: x + xOffset, y: -h - 10, w, h, type, speed: spd });
 }
 
 function spawnSugar() {
@@ -616,9 +638,9 @@ function loop(ts) {
   // ── UPDATE ──
 
   G.elapsed += dt;
-  // gradual speed ramp: slow start, ramps up over ~90s
-  G.speed = Math.min(G.BASE_SPEED + G.elapsed * 4.2 + G.elapsed * G.elapsed * 0.04, G.MAX_SPEED);
-  G.stripeY = (G.stripeY + G.speed * dt) % 90;
+  // no speed ceiling — keeps getting harder forever
+  G.speed = G.BASE_SPEED + G.elapsed * 5 + G.elapsed * G.elapsed * 0.06;
+  G.stripeY = (G.stripeY + Math.min(G.speed, 800) * dt) % 90;
 
   if (G.hitCooldown > 0) G.hitCooldown -= dt;
 
@@ -667,14 +689,13 @@ function loop(ts) {
     if (G.hitCooldown <= 0) {
       let hit = false;
       if (o.type === 'pothole') {
-        // circle vs circle for pothole
-        hit = circleRect(G.carX, G.carY, G.carW * 0.3, o.x, o.y, o.w * 0.7, o.h * 0.7);
+        hit = circleRect(G.carX, G.carY, G.carW * 0.45, o.x, o.y, o.w * 0.82, o.h * 0.82);
       } else {
-        hit = rectsOverlap(G.carX, G.carY, G.carW*0.65, G.carH*0.65, o.x, o.y, o.w*0.72, o.h*0.72);
+        hit = rectsOverlap(G.carX, G.carY, G.carW*0.85, G.carH*0.68, o.x, o.y, o.w*0.85, o.h*0.75);
       }
       if (hit) {
         G.lives--;
-        G.hitCooldown = 1.4;
+        G.hitCooldown = 0.8;
         if (o.type === 'car') {
           // flash from oncoming headlights
           G.flashAlpha = 0.85;
@@ -696,7 +717,8 @@ function loop(ts) {
     const dx = G.carX - s.x, dy = G.carY - s.y;
     if (Math.sqrt(dx*dx + dy*dy) < s.r + G.carW * 0.48) {
       G.sugarsCollected++;
-      G.beamTimer = (G.beamOn ? G.beamTimer : 0) + 10;
+      // cap beam stack at 20s — no infinite light exploit
+      G.beamTimer = Math.min((G.beamOn ? G.beamTimer : 0) + 10, 20);
       if (G.beamTimer > G.maxBeam) G.maxBeam = G.beamTimer;
       G.beamOn = true;
       const buffEl = document.getElementById('hudBuff');
