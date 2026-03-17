@@ -211,6 +211,20 @@
 
     .back-link { display:none; }
 
+    /* ALWAYS VISIBLE BACK */
+    .back-fixed {
+      position:fixed; top:0; left:0;
+      z-index:200;
+      padding:14px 18px;
+      font-family:'Bebas Neue',sans-serif;
+      font-size:16px; letter-spacing:3px;
+      color:rgba(201,168,76,0.5);
+      text-decoration:none; text-transform:uppercase;
+      transition:color .2s;
+      pointer-events:all;
+    }
+    .back-fixed:hover, .back-fixed:active { color:var(--gold); }
+
     /* FLASH overlay */
     #flash {
       position:fixed; inset:0; background:#fff;
@@ -221,7 +235,7 @@
 </head>
 <body>
 
-<a href="index.html" class="back-link">← G-Light</a>
+<a href="index.html" class="back-fixed">← G-Light</a>
 <div id="flash"></div>
 <canvas id="c"></canvas>
 
@@ -230,7 +244,6 @@
   <div class="hud-logo">G-LIGHT</div>
   <div class="hud-timer" id="hudTimer">0.0</div>
   <div class="hud-buff" id="hudBuff">⚡ FULL BEAM</div>
-  <a href="index.html" class="hud-back">← SPÄŤ</a>
 </div>
 
 <!-- MOBILE CONTROLS -->
