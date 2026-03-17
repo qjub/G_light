@@ -448,9 +448,9 @@ function initGame() {
   G.elapsed   = 0;
   G.speed     = G.BASE_SPEED;
   G.obsTimer  = 0;
-  G.obsInterval = 1.4;
+  G.obsInterval = 1.1;
   G.sugarTimer  = 0;
-  G.sugarInterval = 9;
+  G.sugarInterval = 7;
   G.flashAlpha  = 0;
   G.lives       = 3;
   G.hitCooldown = 0;
@@ -638,29 +638,20 @@ function drawSugar(s) {
 }
 
 function drawBeam() {
+  if(!G.beamOn) return; // bez boosta — žiadny beam
   const W = canvas.width, H = canvas.height;
   const cx = G.carX, cy = G.carY - G.carH/2;
 
-  // Cone of light
-  const beamLen = G.beamOn ? H : H * 0.38;
-  const halfW   = G.beamOn ? G.roadW * 0.45 : G.roadW * 0.22;
-
-  const grad = ctx.createLinearGradient(cx, cy, cx, cy - beamLen);
-  if(G.beamOn) {
-    grad.addColorStop(0, 'rgba(255,250,200,0.22)');
-    grad.addColorStop(0.5,'rgba(255,245,180,0.07)');
-    grad.addColorStop(1, 'rgba(255,245,180,0)');
-  } else {
-    grad.addColorStop(0, 'rgba(255,240,150,0.18)');
-    grad.addColorStop(0.6,'rgba(255,235,120,0.05)');
-    grad.addColorStop(1, 'rgba(255,235,120,0)');
-  }
+  const grad = ctx.createLinearGradient(cx, cy, cx, cy - H);
+  grad.addColorStop(0, 'rgba(255,250,200,0.25)');
+  grad.addColorStop(0.5,'rgba(255,245,180,0.08)');
+  grad.addColorStop(1, 'rgba(255,245,180,0)');
 
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(cx - G.carW/2 + 6, cy);
-  ctx.lineTo(cx - halfW, cy - beamLen);
-  ctx.lineTo(cx + halfW, cy - beamLen);
+  ctx.lineTo(cx - G.roadW * 0.45, cy - H);
+  ctx.lineTo(cx + G.roadW * 0.45, cy - H);
   ctx.lineTo(cx + G.carW/2 - 6, cy);
   ctx.closePath();
   ctx.fillStyle = grad;
@@ -670,27 +661,37 @@ function drawBeam() {
 
 function drawDarkness() {
   const W = canvas.width, H = canvas.height;
-  if(G.beamOn) return; // full light, no darkness
-
-  // Radial mask — darkness everywhere except beam cone
   const cx = G.carX, cy = G.carY;
-  const visR = Math.min(W,H) * 0.28;
 
-  // Full dark overlay
+  if(G.beamOn) {
+    // Boost aktívny — len jemný vignette na okrajoch
+    const rg = ctx.createRadialGradient(cx, cy, H*0.3, cx, cy, H*0.9);
+    rg.addColorStop(0,'rgba(0,0,0,0)');
+    rg.addColorStop(1,'rgba(0,0,0,0.55)');
+    ctx.save();
+    ctx.fillStyle = rg;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    return;
+  }
+
+  // Bez boosta — úplná tma, len malý kužeľ svetla pred autom
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.82)';
+  ctx.fillStyle = 'rgba(0,0,0,0.92)';
   ctx.fillRect(0,0,W,H);
 
-  // Cut out visible area
-  const rg = ctx.createRadialGradient(cx, cy-G.carH*0.4, 0, cx, cy-G.carH*0.4, visR);
+  // malý výrez pred autom
+  const visR = Math.min(W,H) * 0.22;
+  const focusY = cy - G.carH * 0.5;
+  const rg = ctx.createRadialGradient(cx, focusY, 0, cx, focusY, visR);
   rg.addColorStop(0,'rgba(0,0,0,0)');
-  rg.addColorStop(0.7,'rgba(0,0,0,0)');
+  rg.addColorStop(0.6,'rgba(0,0,0,0)');
   rg.addColorStop(1,'rgba(0,0,0,1)');
 
   ctx.globalCompositeOperation = 'destination-out';
   ctx.fillStyle = rg;
   ctx.beginPath();
-  ctx.arc(cx, cy-G.carH*0.4, visR, 0, Math.PI*2);
+  ctx.arc(cx, focusY, visR, 0, Math.PI*2);
   ctx.fill();
   ctx.restore();
 }
@@ -736,7 +737,7 @@ function loop(ts) {
 
   // Update speed
   G.elapsed += dt;
-  G.speed = Math.min(G.BASE_SPEED + G.elapsed * 18, G.MAX_SPEED);
+  G.speed = Math.min(G.BASE_SPEED + G.elapsed * 28, G.MAX_SPEED);
   G.stripeY = (G.stripeY + G.speed * dt) % (50+40);
 
   // Hit cooldown
@@ -761,8 +762,10 @@ function loop(ts) {
   G.obsTimer += dt;
   if(G.obsTimer >= G.obsInterval) {
     G.obsTimer = 0;
-    G.obsInterval = Math.max(0.55, 1.4 - G.elapsed * 0.015);
+    G.obsInterval = Math.max(0.35, 1.1 - G.elapsed * 0.02);
     spawnObs();
+    // po 20s spawn dvojitých prekážok
+    if(G.elapsed > 20 && Math.random() < 0.3) spawnObs();
   }
 
   // Spawn sugar
@@ -799,12 +802,9 @@ function loop(ts) {
     const dx = G.carX - s.x, dy = G.carY - s.y;
     if(Math.sqrt(dx*dx+dy*dy) < s.r + G.carW/2) {
       G.sugarsCollected++;
-      // každý cukor pridá 10 sekúnd navyše
-      const dur = G.BEAM_DUR + (G.sugarsCollected - 1) * 10;
-      const interval = Math.max(3, G.sugarInterval * 0.8);
-      G.sugarInterval = interval;
-      G.beamOn    = true;
-      G.beamTimer = dur;
+      // každý cukor pridá 10 sekúnd — stackuje sa
+      G.beamTimer = (G.beamOn ? G.beamTimer : 0) + 10;
+      G.beamOn = true;
       document.getElementById('hudBuff').classList.add('on');
       document.getElementById('hudBuff').textContent = `⚡ FULL BEAM ${G.beamTimer.toFixed(1)}s`;
       G.sugars.splice(i,1);
