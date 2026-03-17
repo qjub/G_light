@@ -147,15 +147,16 @@
     }
     #mobileCtrl.show { display:flex; }
     .mob-btn {
-      width:76px; height:76px; border-radius:50%;
-      border:1px solid rgba(201,168,76,0.25);
-      background:rgba(201,168,76,0.06);
+      width:80px; height:80px;
       display:flex; align-items:center; justify-content:center;
-      font-size:30px; touch-action:none; user-select:none;
-      -webkit-user-select:none; pointer-events:all;
-      transition:background .1s;
+      font-family:'Bebas Neue',sans-serif;
+      font-size:42px; line-height:1;
+      color:rgba(201,168,76,0.5);
+      pointer-events:all; user-select:none;
+      -webkit-user-select:none; touch-action:none;
+      transition:color .1s;
     }
-    .mob-btn.pressed { background:rgba(201,168,76,0.22); }
+    .mob-btn.pressed { color:var(--gold-bright); }
 
     /* DEATH SCREEN */
     #deathScreen { background:rgba(8,8,8,.97); }
@@ -169,20 +170,25 @@
       font-size:10px; letter-spacing:4px; text-transform:uppercase;
       color:#333; margin-top:6px; text-align:center;
     }
-    .death-score-val {
+    .death-stats {
+      display:flex; align-items:center; justify-content:center;
+      margin-top:40px; border:1px solid rgba(201,168,76,0.15);
+    }
+    .death-stat { padding:28px 36px; text-align:center; flex:1; }
+    .death-stat-val {
       font-family:'Bebas Neue',sans-serif;
-      font-size:clamp(60px,14vw,110px);
-      color:var(--gold); letter-spacing:4px; line-height:1;
-      text-align:center; margin-top:24px;
+      font-size:clamp(38px,7vw,68px);
+      color:var(--gold); letter-spacing:3px; line-height:1;
     }
-    .death-score-lbl {
-      font-size:10px; letter-spacing:4px; text-transform:uppercase;
-      color:#444; text-align:center;
+    .death-stat-lbl {
+      font-size:9px; letter-spacing:3px; text-transform:uppercase;
+      color:#444; margin-top:6px;
     }
-    .death-rank {
-      font-family:'Bebas Neue',sans-serif; font-size:17px;
+    .death-divider { width:1px; height:80px; background:rgba(201,168,76,0.15); flex-shrink:0; }
+    .death-msg {
+      font-family:'Bebas Neue',sans-serif; font-size:18px;
       letter-spacing:3px; color:var(--gold);
-      text-align:center; margin-top:12px; min-height:26px;
+      text-align:center; margin-top:20px; min-height:28px;
     }
     .death-actions {
       margin-top:28px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
@@ -197,7 +203,11 @@
     .btn-p:hover { background:var(--gold-bright); }
     .btn-s { background:transparent; color:#444; border:1px solid #1e1e1e; }
     .btn-s:hover { border-color:#333; color:#777; }
-    .death-lb { margin-top:24px; width:100%; max-width:380px; }
+    @media (max-width:500px) {
+      .death-stats { flex-direction:column; }
+      .death-divider { width:80%; height:1px; margin:0 auto; }
+      .death-stat { padding:18px 24px; }
+    }
 
     .back-link { display:none; }
 
@@ -225,8 +235,8 @@
 
 <!-- MOBILE CONTROLS -->
 <div id="mobileCtrl">
-  <div class="mob-btn" id="btnL">◀</div>
-  <div class="mob-btn" id="btnR">▶</div>
+  <div class="mob-btn" id="btnL">←</div>
+  <div class="mob-btn" id="btnR">→</div>
 </div>
 
 <!-- INTRO SCREEN -->
@@ -256,16 +266,29 @@
 <div class="screen hidden" id="deathScreen">
   <div class="death-title">SVETLO ZHASLO</div>
   <div class="death-sub">G-Light čakal, ty nie si prišiel</div>
-  <div class="death-score-val" id="deathVal">0.0</div>
-  <div class="death-score-lbl">sekúnd v tme</div>
-  <div class="death-rank" id="deathRank"></div>
+
+  <div class="death-stats">
+    <div class="death-stat">
+      <div class="death-stat-val" id="deathTime">0.0</div>
+      <div class="death-stat-lbl">sekúnd v tme</div>
+    </div>
+    <div class="death-divider"></div>
+    <div class="death-stat">
+      <div class="death-stat-val" id="deathSugars">0</div>
+      <div class="death-stat-lbl">🍬 svetiel zobratých</div>
+    </div>
+    <div class="death-divider"></div>
+    <div class="death-stat">
+      <div class="death-stat-val" id="deathBeam">5.0s</div>
+      <div class="death-stat-lbl">posledná dĺžka beamu</div>
+    </div>
+  </div>
+
+  <div class="death-msg" id="deathMsg"></div>
+
   <div class="death-actions">
     <button class="btn-action btn-p" id="btnRetry">ZNOVA</button>
     <button class="btn-action btn-s" id="btnMenu">MENU</button>
-  </div>
-  <div class="death-lb lb-wrap">
-    <div class="lb-head">— REBRÍK —</div>
-    <div id="lbDeath"></div>
   </div>
 </div>
 
@@ -345,6 +368,7 @@ const G = {
   // obstacles
   obs: [],
   sugars: [],
+  sugarsCollected: 0,
   // timing
   elapsed: 0,
   speed: 0, BASE_SPEED: 260, MAX_SPEED: 600,
@@ -409,6 +433,7 @@ function initGame() {
   G.beamTimer = 0;
   G.obs       = [];
   G.sugars    = [];
+  G.sugarsCollected = 0;
   G.elapsed   = 0;
   G.speed     = G.BASE_SPEED;
   G.obsTimer  = 0;
@@ -765,8 +790,13 @@ function loop(ts) {
     // Collect
     const dx = G.carX - s.x, dy = G.carY - s.y;
     if(Math.sqrt(dx*dx+dy*dy) < s.r + G.carW/2) {
+      G.sugarsCollected++;
+      // každý cukor predlžuje beam o 20% a znižuje interval spawnu o 20%
+      const dur = G.BEAM_DUR * Math.pow(1.2, G.sugarsCollected - 1);
+      const interval = Math.max(3, G.sugarInterval * 0.8);
+      G.sugarInterval = interval;
       G.beamOn    = true;
-      G.beamTimer = G.BEAM_DUR;
+      G.beamTimer = dur;
       document.getElementById('hudBuff').classList.add('on');
       document.getElementById('hudBuff').textContent = `⚡ FULL BEAM ${G.beamTimer.toFixed(1)}s`;
       G.sugars.splice(i,1);
@@ -828,23 +858,27 @@ function startGame() {
 
 function endGame() {
   state = 'dead';
-  const score = parseFloat(G.elapsed.toFixed(1));
-  const data  = lbSave(nick, score);
+  const score   = parseFloat(G.elapsed.toFixed(1));
+  const sugars  = G.sugarsCollected;
+  const beamDur = sugars > 0 ? (G.BEAM_DUR * Math.pow(1.2, sugars - 1)).toFixed(1) + 's' : '5.0s';
+
+  lbSave(nick, score);
 
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('mobileCtrl').classList.remove('show');
 
-  document.getElementById('deathVal').textContent = score.toFixed(1);
+  document.getElementById('deathTime').textContent   = score.toFixed(1);
+  document.getElementById('deathSugars').textContent = sugars;
+  document.getElementById('deathBeam').textContent   = beamDur;
 
-  // Find rank
-  const rank = data.findIndex(r => r.nick === nick.toUpperCase() && Math.abs(r.score - score) < 0.15) + 1;
-  const rankEl = document.getElementById('deathRank');
-  if(rank===1) rankEl.textContent = '🏆 Prvý v rebríčku!';
-  else if(rank<=3) rankEl.textContent = `#${rank} v rebríčku`;
-  else if(rank>0) rankEl.textContent = `#${rank} miesto`;
-  else rankEl.textContent = '';
+  // motivačná správa
+  const msgEl = document.getElementById('deathMsg');
+  if(score < 10)       msgEl.textContent = 'Začiatočník. G-Light by plakal.';
+  else if(score < 20)  msgEl.textContent = 'Nie zlé. Skús znova.';
+  else if(score < 40)  msgEl.textContent = 'Solidné. Tma ťa skoro nechytila.';
+  else if(score < 60)  msgEl.textContent = '🏆 Legenda tmy. Respekt.';
+  else                 msgEl.textContent = '👑 G-Light by bol hrdý.';
 
-  lbRender('lbDeath', {nick, score});
   document.getElementById('deathScreen').classList.remove('hidden');
 }
 
