@@ -209,21 +209,19 @@
       .death-stat { padding:18px 24px; }
     }
 
-    .back-link { display:none; }
-
-    /* ALWAYS VISIBLE BACK */
-    .back-fixed {
-      position:fixed; top:0; left:0;
+    /* X CLOSE BUTTON */
+    .close-btn {
+      position:fixed; top:0; right:0;
       z-index:200;
       padding:14px 18px;
       font-family:'Bebas Neue',sans-serif;
-      font-size:16px; letter-spacing:3px;
-      color:rgba(201,168,76,0.5);
-      text-decoration:none; text-transform:uppercase;
-      transition:color .2s;
+      font-size:24px;
+      color:var(--gold);
+      text-decoration:none;
       pointer-events:all;
+      opacity:0; transition:opacity .3s;
     }
-    .back-fixed:hover, .back-fixed:active { color:var(--gold); }
+    .close-btn.visible { opacity:1; }
 
     /* FLASH overlay */
     #flash {
@@ -235,7 +233,7 @@
 </head>
 <body>
 
-<a href="index.html" class="back-fixed">← G-Light</a>
+<a href="index.html" class="close-btn" id="closeBtn">✕</a>
 <div id="flash"></div>
 <canvas id="c"></canvas>
 
@@ -892,6 +890,7 @@ function endGame() {
   else if(score < 60)  msgEl.textContent = '🏆 Legenda tmy. Respekt.';
   else                 msgEl.textContent = '👑 G-Light by bol hrdý.';
 
+  document.getElementById('closeBtn').classList.add('visible');
   document.getElementById('deathScreen').classList.remove('hidden');
 }
 
@@ -912,8 +911,12 @@ document.getElementById('nickInput').addEventListener('keydown', e => {
   if(e.key==='Enter' && document.getElementById('nickInput').value.trim()) startGame();
 });
 
-document.getElementById('btnRetry').addEventListener('click', startGame);
+document.getElementById('btnRetry').addEventListener('click', () => {
+  document.getElementById('closeBtn').classList.remove('visible');
+  startGame();
+});
 document.getElementById('btnMenu').addEventListener('click', () => {
+  document.getElementById('closeBtn').classList.remove('visible');
   state = 'intro';
   document.getElementById('deathScreen').classList.add('hidden');
   document.getElementById('hud').classList.add('hidden');
