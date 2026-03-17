@@ -13,7 +13,7 @@
       --red: #e63946;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    html, body { width:100%; height:100%; overflow:hidden; background:#080808; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#080808; touch-action:none; }
 
     body {
       font-family: 'Barlow', sans-serif;
@@ -351,6 +351,16 @@ const ctx    = canvas.getContext('2d');
 function resize() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
+  // ak hra beží, prepočítaj pozície cesty
+  if(state === 'playing') {
+    const W = canvas.width, H = canvas.height;
+    G.roadW = Math.min(W * 0.72, 480);
+    G.laneW = G.roadW / 3;
+    G.roadX = (W - G.roadW) / 2;
+    G.carY  = H * 0.72;
+    // ostrihaj auto ak je mimo cesty
+    G.carX = Math.max(G.roadX + G.carW/2 + 4, Math.min(G.roadX + G.roadW - G.carW/2 - 4, G.carX));
+  }
 }
 resize();
 window.addEventListener('resize', resize);
@@ -416,10 +426,12 @@ function mobilePress(btn, dir, down) {
   btn.classList.toggle('pressed', down);
 }
 
-btnL.addEventListener('touchstart', e => { e.preventDefault(); mobilePress(btnL,'left',true); }, {passive:false});
-btnL.addEventListener('touchend',   e => { e.preventDefault(); mobilePress(btnL,'left',false); }, {passive:false});
-btnR.addEventListener('touchstart', e => { e.preventDefault(); mobilePress(btnR,'right',true); }, {passive:false});
-btnR.addEventListener('touchend',   e => { e.preventDefault(); mobilePress(btnR,'right',false); }, {passive:false});
+btnL.addEventListener('touchstart',  e => { e.preventDefault(); mobilePress(btnL,'left',true);  }, {passive:false});
+btnL.addEventListener('touchend',    e => { e.preventDefault(); mobilePress(btnL,'left',false); }, {passive:false});
+btnL.addEventListener('touchcancel', e => { e.preventDefault(); mobilePress(btnL,'left',false); }, {passive:false});
+btnR.addEventListener('touchstart',  e => { e.preventDefault(); mobilePress(btnR,'right',true);  }, {passive:false});
+btnR.addEventListener('touchend',    e => { e.preventDefault(); mobilePress(btnR,'right',false); }, {passive:false});
+btnR.addEventListener('touchcancel', e => { e.preventDefault(); mobilePress(btnR,'right',false); }, {passive:false});
 
 // ══════════════════════════════════════════════
 //  GAME INIT
@@ -764,8 +776,11 @@ function loop(ts) {
     G.obsTimer = 0;
     G.obsInterval = Math.max(0.35, 1.1 - G.elapsed * 0.02);
     spawnObs();
-    // po 20s spawn dvojitých prekážok
-    if(G.elapsed > 20 && Math.random() < 0.3) spawnObs();
+    // po 20s spawn druhej prekážky s malým oneskorením
+    if(G.elapsed > 20 && Math.random() < 0.3) {
+      G.obsTimer = -0.15; // mierne oneskorenie druhej
+      spawnObs();
+    }
   }
 
   // Spawn sugar
@@ -855,12 +870,15 @@ function loop(ts) {
 function startGame() {
   nick = (document.getElementById('nickInput').value.trim() || 'ANON').toUpperCase();
   state = 'playing';
+  // reset keys — ak hráč drží šípku pri retry
+  keys.left = false;
+  keys.right = false;
   document.getElementById('introScreen').classList.add('hidden');
   document.getElementById('deathScreen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
   if(isMobile) document.getElementById('mobileCtrl').classList.add('show');
   initGame();
-  lastT = performance.now();
+  lastT = performance.now(); // správny reset — nie 0
   requestAnimationFrame(loop);
 }
 
@@ -868,18 +886,21 @@ function endGame() {
   state = 'dead';
   const score   = parseFloat(G.elapsed.toFixed(1));
   const sugars  = G.sugarsCollected;
-  const beamDur = sugars > 0 ? (G.BEAM_DUR + (sugars - 1) * 10).toFixed(0) + 's' : '10s';
+  // posledná dosiahnutá dĺžka beamu = sugars * 10s
+  const beamDur = sugars > 0 ? (sugars * 10) + 's' : '0s';
 
   lbSave(nick, score);
 
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('mobileCtrl').classList.remove('show');
+  // reset keys pri konci hry
+  keys.left = false;
+  keys.right = false;
 
   document.getElementById('deathTime').textContent   = score.toFixed(1);
   document.getElementById('deathSugars').textContent = sugars;
   document.getElementById('deathBeam').textContent   = beamDur;
 
-  // motivačná správa
   const msgEl = document.getElementById('deathMsg');
   if(score < 10)       msgEl.textContent = 'Začiatočník. G-Light by plakal.';
   else if(score < 20)  msgEl.textContent = 'Nie zlé. Skús znova.';
