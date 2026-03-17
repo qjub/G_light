@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>BEAM — G-Light</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #c9a84c;
+      --gold-bright: #f0c040;
+      --black: #080808;
+      --red: #e63946;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#080808; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas { display:block; touch-action:none; }
+
+    /* SCREENS */
+    .screen {
+      position:fixed; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:24px; z-index:10;
+    }
+    .screen.hidden { display:none !important; }
+
+    /* INTRO */
+    #introScreen {
+      background: radial-gradient(ellipse at 50% 35%, rgba(201,168,76,0.08) 0%, #080808 65%);
+    }
+    .game-logo {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(52px,13vw,110px);
+      letter-spacing:10px; color:var(--gold);
+      line-height:1; text-align:center;
+    }
+    .game-logo span { color:#fff; }
+    .game-sub {
+      font-size:clamp(9px,2vw,12px); letter-spacing:5px;
+      text-transform:uppercase; color:#444;
+      margin-top:6px; text-align:center;
+    }
+    .nick-wrap {
+      margin-top:40px; width:100%; max-width:340px;
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+    }
+    .nick-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#444; }
+    #nickInput {
+      width:100%; background:transparent;
+      border:none; border-bottom:1px solid rgba(201,168,76,0.35);
+      padding:10px 4px;
+      font-family:'Bebas Neue',sans-serif; font-size:26px;
+      letter-spacing:4px; color:var(--gold); text-align:center; outline:none;
+      transition:border-color .2s;
+    }
+    #nickInput::placeholder { color:#2a2a2a; }
+    #nickInput:focus { border-color:var(--gold); }
+    .btn-start {
+      width:100%; margin-top:8px; padding:15px;
+      background:var(--gold); color:#080808;
+      font-family:'Bebas Neue',sans-serif; font-size:21px; letter-spacing:4px;
+      border:none; cursor:pointer; transition:background .15s, transform .1s;
+    }
+    .btn-start:hover { background:var(--gold-bright); }
+    .btn-start:active { transform:scale(.98); }
+    .controls-hint {
+      margin-top:28px; display:flex; gap:20px;
+      flex-wrap:wrap; justify-content:center;
+    }
+    .hint {
+      font-size:9px; letter-spacing:3px; text-transform:uppercase; color:#333;
+      display:flex; align-items:center; gap:6px;
+    }
+    .hint-key {
+      border:1px solid #2a2a2a; padding:2px 7px;
+      font-family:'Bebas Neue',sans-serif; font-size:12px; color:#555;
+    }
+
+    /* LEADERBOARD PREVIEW */
+    .lb-wrap { margin-top:32px; width:100%; max-width:340px; }
+    .lb-head {
+      font-family:'Bebas Neue',sans-serif; font-size:14px;
+      letter-spacing:4px; color:#333; margin-bottom:10px; text-align:center;
+    }
+    .lb-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+    }
+    .lb-rank {
+      font-family:'Bebas Neue',sans-serif; font-size:16px;
+      color:#2a2a2a; width:26px; flex-shrink:0;
+    }
+    .lb-rank.g { color:var(--gold); }
+    .lb-rank.s { color:#aaa; }
+    .lb-rank.b { color:#cd7f32; }
+    .lb-nick { flex:1; padding:0 10px; color:#888; font-size:12px; letter-spacing:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .lb-score { font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--gold); letter-spacing:2px; }
+    .lb-empty { text-align:center; color:#2a2a2a; font-size:10px; letter-spacing:3px; text-transform:uppercase; padding:16px 0; }
+
+    /* HUD */
+    #hud {
+      position:fixed; top:0; left:0; right:0;
+      padding:14px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      z-index:5; pointer-events:none;
+    }
+    #hud.hidden { display:none; }
+    .hud-logo {
+      font-family:'Bebas Neue',sans-serif; font-size:16px;
+      letter-spacing:4px; color:var(--gold); opacity:.5;
+    }
+    .hud-timer {
+      font-family:'Bebas Neue',sans-serif; font-size:44px;
+      letter-spacing:2px; color:#fff; line-height:1;
+    }
+    .hud-buff {
+      font-family:'Bebas Neue',sans-serif; font-size:13px;
+      letter-spacing:3px; color:var(--gold); opacity:0;
+      transition:opacity .3s; text-transform:uppercase;
+    }
+    .hud-buff.on { opacity:1; }
+
+    /* MOBILE CONTROLS */
+    #mobileCtrl {
+      position:fixed; bottom:0; left:0; right:0;
+      padding:16px 28px 28px;
+      display:none; justify-content:space-between; align-items:center;
+      z-index:5;
+    }
+    #mobileCtrl.show { display:flex; }
+    .mob-btn {
+      width:76px; height:76px; border-radius:50%;
+      border:1px solid rgba(201,168,76,0.25);
+      background:rgba(201,168,76,0.06);
+      display:flex; align-items:center; justify-content:center;
+      font-size:30px; touch-action:none; user-select:none;
+      -webkit-user-select:none; pointer-events:all;
+      transition:background .1s;
+    }
+    .mob-btn.pressed { background:rgba(201,168,76,0.22); }
+
+    /* DEATH SCREEN */
+    #deathScreen { background:rgba(8,8,8,.97); }
+    .death-title {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(44px,10vw,86px);
+      letter-spacing:6px; color:var(--red);
+      text-align:center; line-height:1;
+    }
+    .death-sub {
+      font-size:10px; letter-spacing:4px; text-transform:uppercase;
+      color:#333; margin-top:6px; text-align:center;
+    }
+    .death-score-val {
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(60px,14vw,110px);
+      color:var(--gold); letter-spacing:4px; line-height:1;
+      text-align:center; margin-top:24px;
+    }
+    .death-score-lbl {
+      font-size:10px; letter-spacing:4px; text-transform:uppercase;
+      color:#444; text-align:center;
+    }
+    .death-rank {
+      font-family:'Bebas Neue',sans-serif; font-size:17px;
+      letter-spacing:3px; color:var(--gold);
+      text-align:center; margin-top:12px; min-height:26px;
+    }
+    .death-actions {
+      margin-top:28px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+    }
+    .btn-action {
+      padding:13px 30px; font-family:'Bebas Neue',sans-serif;
+      font-size:17px; letter-spacing:3px; border:none; cursor:pointer;
+      transition:background .15s, transform .1s;
+    }
+    .btn-action:active { transform:scale(.97); }
+    .btn-p { background:var(--gold); color:#080808; }
+    .btn-p:hover { background:var(--gold-bright); }
+    .btn-s { background:transparent; color:#444; border:1px solid #1e1e1e; }
+    .btn-s:hover { border-color:#333; color:#777; }
+    .death-lb { margin-top:24px; width:100%; max-width:380px; }
+
+    /* BACK */
+    .back-link {
+      position:fixed; top:18px; left:20px;
+      font-family:'Bebas Neue',sans-serif; font-size:13px;
+      letter-spacing:3px; color:#2a2a2a; text-decoration:none;
+      text-transform:uppercase; transition:color .2s; z-index:20;
+    }
+    .back-link:hover { color:var(--gold); }
+
+    /* FLASH overlay */
+    #flash {
+      position:fixed; inset:0; background:#fff;
+      opacity:0; pointer-events:none; z-index:8;
+      transition:opacity .15s;
+    }
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">← G-Light</a>
+<div id="flash"></div>
+<canvas id="c"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-logo">G-LIGHT</div>
+  <div class="hud-timer" id="hudTimer">0.0</div>
+  <div class="hud-buff" id="hudBuff">⚡ FULL BEAM</div>
+</div>
+
+<!-- MOBILE CONTROLS -->
+<div id="mobileCtrl">
+  <div class="mob-btn" id="btnL">◀</div>
+  <div class="mob-btn" id="btnR">▶</div>
+</div>
+
+<!-- INTRO SCREEN -->
+<div class="screen" id="introScreen">
+  <div class="game-logo"><span>BEAM</span></div>
+  <div class="game-sub">G-Light · Prežij tmu · Zbieraj cukor</div>
+
+  <div class="nick-wrap">
+    <div class="nick-label">Tvoj nick</div>
+    <input id="nickInput" type="text" maxlength="16" placeholder="ZADAJ NICK" autocomplete="off" spellcheck="false">
+    <button class="btn-start" id="btnStart">ŠTART — ZHASNI SVETLÁ</button>
+  </div>
+
+  <div class="controls-hint">
+    <div class="hint"><span class="hint-key">←</span><span class="hint-key">→</span> pohyb</div>
+    <div class="hint"><span class="hint-key">A</span><span class="hint-key">D</span> pohyb</div>
+    <div class="hint">🍬 cukor = full beam</div>
+  </div>
+
+  <div class="lb-wrap">
+    <div class="lb-head">— REBRÍK —</div>
+    <div id="lbIntro"></div>
+  </div>
+</div>
+
+<!-- DEATH SCREEN -->
+<div class="screen hidden" id="deathScreen">
+  <div class="death-title">SVETLO ZHASLO</div>
+  <div class="death-sub">G-Light čakal, ty nie si prišiel</div>
+  <div class="death-score-val" id="deathVal">0.0</div>
+  <div class="death-score-lbl">sekúnd v tme</div>
+  <div class="death-rank" id="deathRank"></div>
+  <div class="death-actions">
+    <button class="btn-action btn-p" id="btnRetry">ZNOVA</button>
+    <button class="btn-action btn-s" id="btnMenu">MENU</button>
+  </div>
+  <div class="death-lb lb-wrap">
+    <div class="lb-head">— REBRÍK —</div>
+    <div id="lbDeath"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STORAGE — leaderboard
+// ══════════════════════════════════════════════
+const LB_KEY = 'beam-leaderboard-v1';
+const MAX_LB  = 10;
+
+function lbLoad() {
+  try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function lbSave(nick, score) {
+  let data = lbLoad();
+  data.push({ nick: nick.toUpperCase().slice(0,14), score, ts: Date.now() });
+  data.sort((a,b) => b.score - a.score);
+  data = data.slice(0, MAX_LB);
+  try { localStorage.setItem(LB_KEY, JSON.stringify(data)); } catch(e){}
+  return data;
+}
+
+function lbRender(containerId, highlight) {
+  const el = document.getElementById(containerId);
+  const data = lbLoad();
+  if (!data.length) { el.innerHTML = '<div class="lb-empty">Zatiaľ nikto — buď prvý</div>'; return; }
+  const medals = ['g','s','b'];
+  const hlNick  = highlight && typeof highlight === 'object' ? highlight.nick  : null;
+  const hlScore = highlight && typeof highlight === 'object' ? highlight.score : null;
+  el.innerHTML = data.slice(0,8).map((r,i) => {
+    const cls = medals[i] || '';
+    const hi  = hlNick && r.nick === hlNick.toUpperCase() && Math.abs(r.score - hlScore) < 0.2 ? 'style="color:#fff"' : '';
+    return `<div class="lb-row">
+      <div class="lb-rank ${cls}">${i+1}</div>
+      <div class="lb-nick" ${hi}>${r.nick}</div>
+      <div class="lb-score">${r.score.toFixed(1)}s</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  CANVAS SETUP
+// ══════════════════════════════════════════════
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ══════════════════════════════════════════════
+//  DETECT MOBILE
+// ══════════════════════════════════════════════
+const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+// ══════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════
+let state = 'intro'; // intro | playing | dead
+let nick  = 'ANON';
+
+const G = {
+  // road
+  roadW: 0, laneW: 0,
+  roadX: 0,
+  stripeY: 0, stripeSpeed: 0,
+  // car
+  carX: 0, carY: 0, carW: 44, carH: 76,
+  carSpeed: 0, targetX: 0,
+  // beam
+  beamOn: false, beamTimer: 0, BEAM_DUR: 5,
+  // obstacles
+  obs: [],
+  sugars: [],
+  // timing
+  elapsed: 0,
+  speed: 0, BASE_SPEED: 260, MAX_SPEED: 600,
+  // spawn timers
+  obsTimer: 0, obsInterval: 1.4,
+  sugarTimer: 0, sugarInterval: 8,
+  // flash
+  flashAlpha: 0,
+  // lives
+  lives: 3,
+  hitCooldown: 0,
+};
+
+// ══════════════════════════════════════════════
+//  INPUT
+// ══════════════════════════════════════════════
+const keys = { left: false, right: false };
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowLeft'  || e.key==='a' || e.key==='A') keys.left=true;
+  if (e.key==='ArrowRight' || e.key==='d' || e.key==='D') keys.right=true;
+});
+document.addEventListener('keyup', e => {
+  if (e.key==='ArrowLeft'  || e.key==='a' || e.key==='A') keys.left=false;
+  if (e.key==='ArrowRight' || e.key==='d' || e.key==='D') keys.right=false;
+});
+
+// Mobile buttons
+const btnL = document.getElementById('btnL');
+const btnR = document.getElementById('btnR');
+
+function mobilePress(btn, dir, down) {
+  keys[dir] = down;
+  btn.classList.toggle('pressed', down);
+}
+
+btnL.addEventListener('touchstart', e => { e.preventDefault(); mobilePress(btnL,'left',true); }, {passive:false});
+btnL.addEventListener('touchend',   e => { e.preventDefault(); mobilePress(btnL,'left',false); }, {passive:false});
+btnR.addEventListener('touchstart', e => { e.preventDefault(); mobilePress(btnR,'right',true); }, {passive:false});
+btnR.addEventListener('touchend',   e => { e.preventDefault(); mobilePress(btnR,'right',false); }, {passive:false});
+
+// ══════════════════════════════════════════════
+//  GAME INIT
+// ══════════════════════════════════════════════
+function initGame() {
+  const W = canvas.width, H = canvas.height;
+
+  G.roadW     = Math.min(W * 0.72, 480);
+  G.laneW     = G.roadW / 3;
+  G.roadX     = (W - G.roadW) / 2;
+  G.stripeY   = 0;
+  G.stripeSpeed = 0;
+
+  G.carW = isMobile ? 36 : 44;
+  G.carH = isMobile ? 62 : 76;
+  G.carX = W / 2;
+  G.carY = H * 0.72;
+  G.carSpeed = isMobile ? 280 : 340;
+  G.targetX  = G.carX;
+
+  G.beamOn    = false;
+  G.beamTimer = 0;
+  G.obs       = [];
+  G.sugars    = [];
+  G.elapsed   = 0;
+  G.speed     = G.BASE_SPEED;
+  G.obsTimer  = 0;
+  G.obsInterval = 1.4;
+  G.sugarTimer  = 0;
+  G.sugarInterval = 9;
+  G.flashAlpha  = 0;
+  G.lives       = 3;
+  G.hitCooldown = 0;
+
+  // Spawn initial sugar quickly so player knows mechanic
+  G.sugarTimer = G.sugarInterval - 3;
+}
+
+// ══════════════════════════════════════════════
+//  SPAWN HELPERS
+// ══════════════════════════════════════════════
+function spawnObs() {
+  const W = canvas.width;
+  // pick random lane
+  const lanes = [0,1,2];
+  const lane  = lanes[Math.floor(Math.random()*3)];
+  const x     = G.roadX + lane * G.laneW + G.laneW/2;
+  const types = ['car','pothole','truck'];
+  const weights = [0.5, 0.3, 0.2];
+  let r = Math.random(), type = 'car';
+  let acc = 0;
+  for(let i=0;i<types.length;i++){acc+=weights[i];if(r<acc){type=types[i];break;}}
+
+  const w = type==='truck' ? G.laneW*0.85 : type==='car' ? 38 : 28;
+  const h = type==='truck' ? 110 : type==='car' ? 68 : 22;
+  G.obs.push({ x, y:-h, w, h, type, speed: G.speed * (0.6 + Math.random()*0.5) });
+}
+
+function spawnSugar() {
+  const lane = Math.floor(Math.random()*3);
+  const x    = G.roadX + lane * G.laneW + G.laneW/2;
+  G.sugars.push({ x, y: -24, r: 14, angle: 0 });
+}
+
+// ══════════════════════════════════════════════
+//  DRAWING
+// ══════════════════════════════════════════════
+function drawRoad() {
+  const W = canvas.width, H = canvas.height;
+  const rx = G.roadX, rw = G.roadW;
+
+  // asphalt
+  ctx.fillStyle = '#111';
+  ctx.fillRect(rx, 0, rw, H);
+
+  // side gutters
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0,0,rx,H);
+  ctx.fillRect(rx+rw,0,W-(rx+rw),H);
+
+  // road edges
+  ctx.strokeStyle = 'rgba(201,168,76,0.5)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(rx,0); ctx.lineTo(rx,H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rx+rw,0); ctx.lineTo(rx+rw,H); ctx.stroke();
+
+  // lane stripes
+  const stripeH = 50, stripeGap = 40;
+  const totalH  = stripeH + stripeGap;
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth   = 2;
+  ctx.setLineDash([stripeH, stripeGap]);
+  ctx.lineDashOffset = -G.stripeY;
+
+  for(let l=1;l<3;l++){
+    const lx = rx + l*G.laneW;
+    ctx.beginPath(); ctx.moveTo(lx,0); ctx.lineTo(lx,H); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+function drawCar(x, y, w, h, alpha=1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+
+  // Body
+  const grad = ctx.createLinearGradient(-w/2,0,w/2,0);
+  grad.addColorStop(0,'#1a1a2e');
+  grad.addColorStop(0.5,'#2a2a4a');
+  grad.addColorStop(1,'#1a1a2e');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(-w/2, -h/2, w, h, 6);
+  ctx.fill();
+
+  // Gold trim
+  ctx.strokeStyle = 'rgba(201,168,76,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(-w/2, -h/2, w, h, 6);
+  ctx.stroke();
+
+  // Windshield
+  ctx.fillStyle = 'rgba(100,180,255,0.15)';
+  ctx.fillRect(-w/2+5, -h/2+8, w-10, h*0.28);
+
+  // Headlights (front = top since car faces up)
+  ctx.fillStyle = G.beamOn ? '#fff8dc' : 'rgba(255,240,150,0.6)';
+  ctx.shadowColor = G.beamOn ? '#fff' : '#ffd700';
+  ctx.shadowBlur  = G.beamOn ? 18 : 8;
+  ctx.fillRect(-w/2+5, -h/2+2, 10, 7);
+  ctx.fillRect(w/2-15, -h/2+2, 10, 7);
+  ctx.shadowBlur = 0;
+
+  // Tail lights
+  ctx.fillStyle = '#ff3333';
+  ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 6;
+  ctx.fillRect(-w/2+4, h/2-9, 9, 6);
+  ctx.fillRect(w/2-13, h/2-9, 9, 6);
+  ctx.shadowBlur = 0;
+
+  ctx.restore();
+}
+
+function drawObs(o) {
+  ctx.save();
+  ctx.translate(o.x, o.y);
+
+  if(o.type === 'pothole') {
+    // pothole
+    const rg = ctx.createRadialGradient(0,0,2,0,0,o.w/2);
+    rg.addColorStop(0,'#050505');
+    rg.addColorStop(1,'rgba(20,20,20,0.4)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.ellipse(0,0,o.w/2,o.h/2,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(80,80,80,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  } else if(o.type === 'truck') {
+    // truck
+    const grad = ctx.createLinearGradient(-o.w/2,0,o.w/2,0);
+    grad.addColorStop(0,'#1c1c1c'); grad.addColorStop(0.5,'#2c2c2c'); grad.addColorStop(1,'#1c1c1c');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(-o.w/2,-o.h/2,o.w,o.h,4); ctx.fill();
+    ctx.strokeStyle = '#e63946'; ctx.lineWidth=2;
+    ctx.strokeRect(-o.w/2,-o.h/2,o.w,o.h);
+    // tail lights
+    ctx.fillStyle='#ff3333'; ctx.shadowColor='#ff0000'; ctx.shadowBlur=8;
+    ctx.fillRect(-o.w/2+4,o.h/2-8,12,6);
+    ctx.fillRect(o.w/2-16,o.h/2-8,12,6);
+    ctx.shadowBlur=0;
+    // warning stripe
+    ctx.fillStyle='rgba(230,57,70,0.25)';
+    for(let i=-3;i<3;i++){
+      ctx.fillRect(i*16-8,-o.h/2,8,o.h);
+    }
+  } else {
+    // oncoming car — brighter lights facing down
+    const grad = ctx.createLinearGradient(-o.w/2,0,o.w/2,0);
+    grad.addColorStop(0,'#1f1f35'); grad.addColorStop(0.5,'#2d2d50'); grad.addColorStop(1,'#1f1f35');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.roundRect(-o.w/2,-o.h/2,o.w,o.h,5); ctx.fill();
+    ctx.strokeStyle='rgba(100,100,200,0.3)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(-o.w/2,-o.h/2,o.w,o.h,5); ctx.stroke();
+    // headlights facing player (bottom of sprite)
+    ctx.fillStyle='#ffffee'; ctx.shadowColor='#ffffff'; ctx.shadowBlur=20;
+    ctx.fillRect(-o.w/2+5,o.h/2-9,10,7);
+    ctx.fillRect(o.w/2-15,o.h/2-9,10,7);
+    ctx.shadowBlur=0;
+  }
+  ctx.restore();
+}
+
+function drawSugar(s) {
+  ctx.save();
+  ctx.translate(s.x, s.y);
+  ctx.rotate(s.angle);
+
+  // Glow
+  const rg = ctx.createRadialGradient(0,0,2,0,0,s.r*2);
+  rg.addColorStop(0,'rgba(201,168,76,0.3)');
+  rg.addColorStop(1,'rgba(201,168,76,0)');
+  ctx.fillStyle = rg;
+  ctx.beginPath(); ctx.arc(0,0,s.r*2,0,Math.PI*2); ctx.fill();
+
+  // Sugar icon
+  ctx.fillStyle = '#c9a84c';
+  ctx.shadowColor = '#f0c040'; ctx.shadowBlur = 12;
+  ctx.font = `${s.r*1.6}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🍬', 0, 1);
+  ctx.shadowBlur = 0;
+
+  ctx.restore();
+}
+
+function drawBeam() {
+  const W = canvas.width, H = canvas.height;
+  const cx = G.carX, cy = G.carY - G.carH/2;
+
+  // Cone of light
+  const beamLen = G.beamOn ? H : H * 0.38;
+  const halfW   = G.beamOn ? G.roadW * 0.45 : G.roadW * 0.22;
+
+  const grad = ctx.createLinearGradient(cx, cy, cx, cy - beamLen);
+  if(G.beamOn) {
+    grad.addColorStop(0, 'rgba(255,250,200,0.22)');
+    grad.addColorStop(0.5,'rgba(255,245,180,0.07)');
+    grad.addColorStop(1, 'rgba(255,245,180,0)');
+  } else {
+    grad.addColorStop(0, 'rgba(255,240,150,0.18)');
+    grad.addColorStop(0.6,'rgba(255,235,120,0.05)');
+    grad.addColorStop(1, 'rgba(255,235,120,0)');
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx - G.carW/2 + 6, cy);
+  ctx.lineTo(cx - halfW, cy - beamLen);
+  ctx.lineTo(cx + halfW, cy - beamLen);
+  ctx.lineTo(cx + G.carW/2 - 6, cy);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawDarkness() {
+  const W = canvas.width, H = canvas.height;
+  if(G.beamOn) return; // full light, no darkness
+
+  // Radial mask — darkness everywhere except beam cone
+  const cx = G.carX, cy = G.carY;
+  const visR = Math.min(W,H) * 0.28;
+
+  // Full dark overlay
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.82)';
+  ctx.fillRect(0,0,W,H);
+
+  // Cut out visible area
+  const rg = ctx.createRadialGradient(cx, cy-G.carH*0.4, 0, cx, cy-G.carH*0.4, visR);
+  rg.addColorStop(0,'rgba(0,0,0,0)');
+  rg.addColorStop(0.7,'rgba(0,0,0,0)');
+  rg.addColorStop(1,'rgba(0,0,0,1)');
+
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = rg;
+  ctx.beginPath();
+  ctx.arc(cx, cy-G.carH*0.4, visR, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHUD() {
+  // lives as headlight icons
+  const W = canvas.width;
+  ctx.save();
+  ctx.font = '18px serif';
+  ctx.textBaseline = 'middle';
+  for(let i=0;i<3;i++){
+    ctx.globalAlpha = i < G.lives ? 1 : 0.15;
+    ctx.fillText('💡', W - 28 - i*28, 22);
+  }
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════
+//  COLLISION
+// ══════════════════════════════════════════════
+function rectsOverlap(ax,ay,aw,ah, bx,by,bw,bh) {
+  return ax-aw/2 < bx+bw/2 && ax+aw/2 > bx-bw/2 &&
+         ay-ah/2 < by+bh/2 && ay+ah/2 > by-bh/2;
+}
+
+// ══════════════════════════════════════════════
+//  FLASH EFFECT
+// ══════════════════════════════════════════════
+function triggerFlash() {
+  G.flashAlpha = 1;
+}
+
+// ══════════════════════════════════════════════
+//  GAME LOOP
+// ══════════════════════════════════════════════
+let lastT = 0;
+function loop(ts) {
+  if(state !== 'playing') return;
+  const dt = Math.min((ts - lastT) / 1000, 0.05);
+  lastT = ts;
+
+  const W = canvas.width, H = canvas.height;
+
+  // Update speed
+  G.elapsed += dt;
+  G.speed = Math.min(G.BASE_SPEED + G.elapsed * 18, G.MAX_SPEED);
+  G.stripeY = (G.stripeY + G.speed * dt) % (50+40);
+
+  // Hit cooldown
+  if(G.hitCooldown > 0) G.hitCooldown -= dt;
+
+  // Beam timer
+  if(G.beamOn) {
+    G.beamTimer -= dt;
+    if(G.beamTimer <= 0) { G.beamOn = false; document.getElementById('hudBuff').classList.remove('on'); }
+    else {
+      const el = document.getElementById('hudBuff');
+      el.textContent = `⚡ FULL BEAM ${G.beamTimer.toFixed(1)}s`;
+    }
+  }
+
+  // Car movement
+  const moveSpeed = G.carSpeed;
+  if(keys.left)  G.carX = Math.max(G.roadX + G.carW/2 + 4, G.carX - moveSpeed*dt);
+  if(keys.right) G.carX = Math.min(G.roadX + G.roadW - G.carW/2 - 4, G.carX + moveSpeed*dt);
+
+  // Spawn obstacles
+  G.obsTimer += dt;
+  if(G.obsTimer >= G.obsInterval) {
+    G.obsTimer = 0;
+    G.obsInterval = Math.max(0.55, 1.4 - G.elapsed * 0.015);
+    spawnObs();
+  }
+
+  // Spawn sugar
+  G.sugarTimer += dt;
+  if(G.sugarTimer >= G.sugarInterval) {
+    G.sugarTimer = 0;
+    spawnSugar();
+  }
+
+  // Update obstacles
+  for(let i=G.obs.length-1;i>=0;i--) {
+    const o = G.obs[i];
+    o.y += o.speed * dt;
+    if(o.y > H + 120) { G.obs.splice(i,1); continue; }
+
+    // Collision
+    if(G.hitCooldown <= 0 && rectsOverlap(G.carX, G.carY, G.carW*0.7, G.carH*0.7, o.x, o.y, o.w*0.75, o.h*0.75)) {
+      G.lives--;
+      G.hitCooldown = 1.2;
+      if(o.type === 'car') triggerFlash(); // blinded by lights
+      if(G.lives <= 0) { endGame(); return; }
+      G.obs.splice(i,1);
+    }
+  }
+
+  // Update sugars
+  for(let i=G.sugars.length-1;i>=0;i--) {
+    const s = G.sugars[i];
+    s.y += G.speed * 0.55 * dt;
+    s.angle += dt * 1.5;
+    if(s.y > H + 30) { G.sugars.splice(i,1); continue; }
+
+    // Collect
+    const dx = G.carX - s.x, dy = G.carY - s.y;
+    if(Math.sqrt(dx*dx+dy*dy) < s.r + G.carW/2) {
+      G.beamOn    = true;
+      G.beamTimer = G.BEAM_DUR;
+      document.getElementById('hudBuff').classList.add('on');
+      document.getElementById('hudBuff').textContent = `⚡ FULL BEAM ${G.beamTimer.toFixed(1)}s`;
+      G.sugars.splice(i,1);
+    }
+  }
+
+  // Flash decay
+  if(G.flashAlpha > 0) {
+    G.flashAlpha = Math.max(0, G.flashAlpha - dt * 3);
+    document.getElementById('flash').style.opacity = G.flashAlpha;
+  }
+
+  // HUD timer
+  document.getElementById('hudTimer').textContent = G.elapsed.toFixed(1);
+
+  // ── DRAW ──
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = '#060606';
+  ctx.fillRect(0,0,W,H);
+
+  drawRoad();
+  drawBeam();
+
+  // Sugars (under darkness)
+  G.sugars.forEach(drawSugar);
+
+  // Obstacles
+  G.obs.forEach(drawObs);
+
+  // Player car (blink when hit cooldown)
+  const showCar = G.hitCooldown <= 0 || Math.floor(G.hitCooldown*8)%2===0;
+  if(showCar) drawCar(G.carX, G.carY, G.carW, G.carH);
+
+  // Darkness overlay
+  drawDarkness();
+
+  // HUD lives
+  drawHUD();
+
+  requestAnimationFrame(loop);
+}
+
+// ══════════════════════════════════════════════
+//  START / END
+// ══════════════════════════════════════════════
+function startGame() {
+  nick = (document.getElementById('nickInput').value.trim() || 'ANON').toUpperCase();
+  state = 'playing';
+  document.getElementById('introScreen').classList.add('hidden');
+  document.getElementById('deathScreen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');
+  if(isMobile) document.getElementById('mobileCtrl').classList.add('show');
+  initGame();
+  lastT = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function endGame() {
+  state = 'dead';
+  const score = parseFloat(G.elapsed.toFixed(1));
+  const data  = lbSave(nick, score);
+
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('mobileCtrl').classList.remove('show');
+
+  document.getElementById('deathVal').textContent = score.toFixed(1);
+
+  // Find rank
+  const rank = data.findIndex(r => r.nick === nick.toUpperCase() && Math.abs(r.score - score) < 0.15) + 1;
+  const rankEl = document.getElementById('deathRank');
+  if(rank===1) rankEl.textContent = '🏆 Prvý v rebríčku!';
+  else if(rank<=3) rankEl.textContent = `#${rank} v rebríčku`;
+  else if(rank>0) rankEl.textContent = `#${rank} miesto`;
+  else rankEl.textContent = '';
+
+  lbRender('lbDeath', {nick, score});
+  document.getElementById('deathScreen').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════════
+//  BUTTONS
+// ══════════════════════════════════════════════
+document.getElementById('btnStart').addEventListener('click', () => {
+  if(!document.getElementById('nickInput').value.trim()) {
+    document.getElementById('nickInput').focus();
+    document.getElementById('nickInput').style.borderColor = '#e63946';
+    setTimeout(()=>document.getElementById('nickInput').style.borderColor='',800);
+    return;
+  }
+  startGame();
+});
+
+document.getElementById('nickInput').addEventListener('keydown', e => {
+  if(e.key==='Enter' && document.getElementById('nickInput').value.trim()) startGame();
+});
+
+document.getElementById('btnRetry').addEventListener('click', startGame);
+document.getElementById('btnMenu').addEventListener('click', () => {
+  state = 'intro';
+  document.getElementById('deathScreen').classList.add('hidden');
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('mobileCtrl').classList.remove('show');
+  document.getElementById('introScreen').classList.remove('hidden');
+  lbRender('lbIntro');
+});
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+lbRender('lbIntro');
+</script>
+</body>
+</html>
