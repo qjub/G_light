@@ -129,6 +129,14 @@
       transition:opacity .3s; text-transform:uppercase;
     }
     .hud-buff.on { opacity:1; }
+    .hud-back {
+      font-family:'Bebas Neue',sans-serif; font-size:13px;
+      letter-spacing:3px; color:rgba(255,255,255,0.2);
+      text-decoration:none; text-transform:uppercase;
+      pointer-events:all; transition:color .2s;
+      position:absolute; top:50%; right:20px; transform:translateY(-50%);
+    }
+    .hud-back:hover { color:var(--gold); }
 
     /* MOBILE CONTROLS */
     #mobileCtrl {
@@ -191,14 +199,7 @@
     .btn-s:hover { border-color:#333; color:#777; }
     .death-lb { margin-top:24px; width:100%; max-width:380px; }
 
-    /* BACK */
-    .back-link {
-      position:fixed; top:18px; left:20px;
-      font-family:'Bebas Neue',sans-serif; font-size:13px;
-      letter-spacing:3px; color:#2a2a2a; text-decoration:none;
-      text-transform:uppercase; transition:color .2s; z-index:20;
-    }
-    .back-link:hover { color:var(--gold); }
+    .back-link { display:none; }
 
     /* FLASH overlay */
     #flash {
@@ -219,6 +220,7 @@
   <div class="hud-logo">G-LIGHT</div>
   <div class="hud-timer" id="hudTimer">0.0</div>
   <div class="hud-buff" id="hudBuff">⚡ FULL BEAM</div>
+  <a href="index.html" class="hud-back">← SPÄŤ</a>
 </div>
 
 <!-- MOBILE CONTROLS -->
